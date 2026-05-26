@@ -1,0 +1,158 @@
+{% extends "base.html" %}
+{% block title %}BlogUA — Головна{% endblock %}
+{% block head %}
+<style>
+.hero {
+  background: var(--ink);
+  color: #fff;
+  padding: 3rem 2rem;
+  margin: -2rem -2rem 2rem;
+  border-bottom: 3px solid var(--accent);
+  position: relative;
+  overflow: hidden;
+}
+.hero::before {
+  content: '';
+  position: absolute; inset: 0;
+  background: repeating-linear-gradient(
+    -45deg,
+    transparent, transparent 40px,
+    rgba(255,255,255,.015) 40px, rgba(255,255,255,.015) 80px
+  );
+}
+.hero h1 {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(2rem, 5vw, 3rem);
+  line-height: 1.1; margin-bottom: .75rem;
+  position: relative;
+}
+.hero h1 em { color: var(--accent); font-style: italic; }
+.hero p { color: #aaa; font-size: 1.05rem; position: relative; }
+.hero-actions { margin-top: 1.5rem; display: flex; gap: .75rem; flex-wrap: wrap; position: relative; }
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 1.25rem;
+}
+.post-card { display: flex; flex-direction: column; }
+.post-card-body { flex: 1; }
+.post-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.15rem; font-weight: 700;
+  line-height: 1.3; margin-bottom: .5rem;
+}
+.post-title a { text-decoration: none; color: var(--ink); }
+.post-title a:hover { color: var(--accent); }
+.post-excerpt { color: var(--muted); font-size: .9rem; line-height: 1.6; margin-bottom: 1rem; }
+.post-meta {
+  font-size: .78rem; color: var(--muted);
+  display: flex; align-items: center; gap: .75rem;
+  margin-bottom: .75rem; flex-wrap: wrap;
+}
+.post-footer {
+  margin-top: 1rem; padding-top: .75rem;
+  border-top: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+}
+
+.pagination {
+  display: flex; justify-content: center; align-items: center;
+  gap: .5rem; margin-top: 2rem;
+}
+.pagination a, .pagination span {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 36px; height: 36px; border-radius: var(--radius);
+  font-size: .875rem; text-decoration: none;
+  border: 1px solid var(--border); color: var(--ink);
+}
+.pagination a:hover { background: var(--cream); }
+.pagination .active { background: var(--ink); color: #fff; border-color: var(--ink); }
+
+.empty-state {
+  text-align: center; padding: 4rem 2rem;
+}
+.empty-icon { font-size: 3rem; margin-bottom: 1rem; }
+</style>
+{% endblock %}
+{% block content %}
+
+<div class="hero">
+  <h1>Ваші думки заслуговують<br>бути <em>почутими</em></h1>
+  <p>Платформа для письменників, мислителів і творців</p>
+  <div class="hero-actions">
+    {% if user %}
+      <a href="{{ url_for('new_post') }}" class="btn btn-accent">✦ Написати пост</a>
+    {% else %}
+      <a href="{{ url_for('register') }}" class="btn btn-accent">Почати писати</a>
+      <a href="{{ url_for('login') }}" class="btn btn-outline" style="color:#fff;border-color:rgba(255,255,255,.3)">Увійти</a>
+    {% endif %}
+  </div>
+</div>
+
+{% if posts %}
+  <div class="grid">
+    {% for post in posts %}
+    <div class="card post-card">
+      <div class="post-card-body">
+        <div class="post-meta">
+          <span>✍ <a href="{{ url_for('profile', username=post.username) }}" style="color:inherit;text-decoration:none;font-weight:500">{{ post.username }}</a>
+            {% if post.author_role == 'admin' %}<span class="badge-admin">admin</span>{% endif %}
+          </span>
+          <span>📅 {{ post.created_at[:10] }}</span>
+          <span>👁 {{ post.views }}</span>
+          <span>💬 {{ post.comment_count }}</span>
+        </div>
+        <h2 class="post-title">
+          <a href="{{ url_for('view_post', post_id=post.id) }}">{{ post.title }}</a>
+        </h2>
+        <p class="post-excerpt">{{ post.content[:180] }}{% if post.content|length > 180 %}…{% endif %}</p>
+        {% if post.tags %}
+          <div>
+            {% for tag in post.tags.split(',') %}
+              <span class="tag">{{ tag.strip() }}</span>
+            {% endfor %}
+          </div>
+        {% endif %}
+      </div>
+      <div class="post-footer">
+        <a href="{{ url_for('view_post', post_id=post.id) }}" class="btn btn-outline btn-sm">Читати →</a>
+        {% if user and (user.id == post.author_id or user.role == 'admin') %}
+          <div class="flex gap-1">
+            <a href="{{ url_for('edit_post', post_id=post.id) }}" class="btn btn-outline btn-sm">✎</a>
+          </div>
+        {% endif %}
+      </div>
+    </div>
+    {% endfor %}
+  </div>
+
+  {% if total_pages > 1 %}
+  <div class="pagination">
+    {% if page > 1 %}
+      <a href="{{ url_for('index', page=page-1) }}">‹</a>
+    {% endif %}
+    {% for p in range(1, total_pages+1) %}
+      {% if p == page %}
+        <span class="active">{{ p }}</span>
+      {% else %}
+        <a href="{{ url_for('index', page=p) }}">{{ p }}</a>
+      {% endif %}
+    {% endfor %}
+    {% if page < total_pages %}
+      <a href="{{ url_for('index', page=page+1) }}">›</a>
+    {% endif %}
+  </div>
+  {% endif %}
+
+{% else %}
+  <div class="empty-state">
+    <div class="empty-icon">📝</div>
+    <h2 style="font-family:'Playfair Display',serif">Поки що немає постів</h2>
+    <p class="text-muted mt-1">Будьте першим — поділіться своєю думкою!</p>
+    {% if user %}
+      <a href="{{ url_for('new_post') }}" class="btn btn-primary mt-2">Написати перший пост</a>
+    {% endif %}
+  </div>
+{% endif %}
+{% endblock %}

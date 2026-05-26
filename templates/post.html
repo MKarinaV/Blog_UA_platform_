@@ -1,0 +1,187 @@
+{% extends "base.html" %}
+{% block title %}{{ post.title }} — BlogUA{% endblock %}
+{% block head %}
+<style>
+.post-layout {
+  display: grid;
+  grid-template-columns: 1fr 300px;
+  gap: 2rem;
+  align-items: start;
+}
+@media (max-width: 768px) {
+  .post-layout { grid-template-columns: 1fr; }
+}
+.post-article h1 {
+  font-family: 'Playfair Display', serif;
+  font-size: clamp(1.6rem, 4vw, 2.4rem);
+  line-height: 1.2; margin-bottom: 1rem;
+}
+.post-meta-bar {
+  display: flex; align-items: center; gap: 1rem;
+  flex-wrap: wrap; margin-bottom: 1.5rem;
+  padding-bottom: 1rem; border-bottom: 1px solid var(--border);
+  font-size: .85rem; color: var(--muted);
+}
+.post-meta-bar a { color: var(--ink); font-weight: 500; text-decoration: none; }
+.post-meta-bar a:hover { color: var(--accent); }
+.post-body {
+  font-size: 1rem; line-height: 1.8;
+  color: #2a2a2a;
+}
+.post-body p { margin-bottom: 1em; }
+
+.post-actions {
+  display: flex; gap: .75rem; flex-wrap: wrap;
+  margin-top: 1.5rem; padding-top: 1.5rem;
+  border-top: 1px solid var(--border);
+}
+
+/* COMMENTS */
+.comments-section { margin-top: 2.5rem; }
+.comments-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.4rem; margin-bottom: 1.25rem;
+  padding-bottom: .75rem; border-bottom: 2px solid var(--border);
+}
+.comment {
+  padding: 1rem 0;
+  border-bottom: 1px solid var(--border);
+}
+.comment:last-child { border-bottom: none; }
+.comment-header {
+  display: flex; align-items: center; gap: .5rem;
+  margin-bottom: .4rem; font-size: .82rem; color: var(--muted);
+}
+.comment-author { font-weight: 600; color: var(--ink); }
+.comment-body { font-size: .92rem; line-height: 1.6; }
+.comment-actions { margin-top: .5rem; }
+
+/* SIDEBAR */
+.sidebar .card { margin-bottom: 1rem; }
+.sidebar-title { font-weight: 600; margin-bottom: .75rem; font-size: .875rem; text-transform: uppercase; letter-spacing: .5px; color: var(--muted); }
+
+/* COMMENT FORM */
+.comment-form { margin-top: 1.5rem; }
+.comment-form h3 { font-family: 'Playfair Display', serif; font-size: 1.2rem; margin-bottom: 1rem; }
+.pending-notice {
+  background: #fff3cd; border: 1px solid #ffd700; border-radius: var(--radius);
+  padding: .6rem 1rem; font-size: .82rem; color: #7a5c00; margin-bottom: .75rem;
+}
+</style>
+{% endblock %}
+{% block content %}
+<div class="post-layout">
+  <article class="post-article">
+    {% if post.status == 'draft' %}
+      <div style="background:#fff3cd;border:1px solid #ffd700;padding:.5rem 1rem;border-radius:4px;margin-bottom:1rem;font-size:.85rem">
+        ⚠ Чернетка — видна тільки вам та адміністраторам
+      </div>
+    {% endif %}
+
+    <h1>{{ post.title }}</h1>
+
+    <div class="post-meta-bar">
+      <span>✍ <a href="{{ url_for('profile', username=post.username) }}">{{ post.username }}</a>
+        {% if post.author_role == 'admin' %}<span class="badge-admin">admin</span>{% endif %}
+      </span>
+      <span>📅 {{ post.created_at[:10] }}</span>
+      {% if post.updated_at != post.created_at %}
+        <span>✏ оновлено {{ post.updated_at[:10] }}</span>
+      {% endif %}
+      <span>👁 {{ post.views }} переглядів</span>
+      <span>💬 {{ comments|length }} коментарів</span>
+      <span class="status status-{{ post.status }}">{{ 'Опублікований' if post.status == 'published' else 'Чернетка' }}</span>
+    </div>
+
+    <div class="post-body">
+      {% for paragraph in post.content.split('\n') %}
+        {% if paragraph.strip() %}
+          <p>{{ paragraph }}</p>
+        {% endif %}
+      {% endfor %}
+    </div>
+
+    {% if post.tags %}
+      <div style="margin-top:1rem">
+        {% for tag in post.tags.split(',') %}
+          <span class="tag">{{ tag.strip() }}</span>
+        {% endfor %}
+      </div>
+    {% endif %}
+
+    {% if user and (user.id == post.author_id or user.role == 'admin') %}
+      <div class="post-actions">
+        <a href="{{ url_for('edit_post', post_id=post.id) }}" class="btn btn-outline btn-sm">✎ Редагувати</a>
+        <form method="post" action="{{ url_for('delete_post', post_id=post.id) }}"
+              onsubmit="return confirm('Видалити пост?')">
+          <button type="submit" class="btn btn-danger btn-sm">🗑 Видалити</button>
+        </form>
+      </div>
+    {% endif %}
+
+    <!-- COMMENTS -->
+    <section class="comments-section">
+      <h2 class="comments-title">Коментарі ({{ comments|length }})</h2>
+
+      {% if comments %}
+        {% for comment in comments %}
+          <div class="comment">
+            <div class="comment-header">
+              <span class="comment-author">{{ comment.username }}</span>
+              {% if comment.commenter_role == 'admin' %}<span class="badge-admin">admin</span>{% endif %}
+              <span>·</span>
+              <span>{{ comment.created_at[:16].replace('T', ' ') }}</span>
+            </div>
+            <div class="comment-body">{{ comment.content }}</div>
+            {% if user and (user.id == comment.author_id or user.role == 'admin') %}
+              <div class="comment-actions">
+                <form method="post" action="{{ url_for('delete_comment', comment_id=comment.id) }}"
+                      onsubmit="return confirm('Видалити коментар?')" style="display:inline">
+                  <button type="submit" class="btn btn-danger btn-sm">Видалити</button>
+                </form>
+              </div>
+            {% endif %}
+          </div>
+        {% endfor %}
+      {% else %}
+        <p class="text-muted">Коментарів ще немає. Будьте першим!</p>
+      {% endif %}
+
+      {% if user %}
+        <div class="comment-form">
+          <h3>Залишити коментар</h3>
+          {% if user.role != 'admin' %}
+            <div class="pending-notice">ℹ Коментарі проходять модерацію перед публікацією.</div>
+          {% endif %}
+          <form method="post" action="{{ url_for('add_comment', post_id=post.id) }}">
+            <div class="form-group">
+              <textarea name="content" placeholder="Ваш коментар…" required minlength="2" rows="4"></textarea>
+            </div>
+            <button type="submit" class="btn btn-primary">Надіслати</button>
+          </form>
+        </div>
+      {% else %}
+        <p class="text-muted mt-2">
+          <a href="{{ url_for('login') }}" style="color:var(--accent2);font-weight:500">Увійдіть</a>, щоб залишити коментар.
+        </p>
+      {% endif %}
+    </section>
+  </article>
+
+  <aside class="sidebar">
+    <div class="card">
+      <div class="sidebar-title">Автор</div>
+      <p style="font-weight:600">{{ post.username }}</p>
+      {% if post.author_role == 'admin' %}
+        <p class="text-muted" style="font-size:.8rem">Адміністратор</p>
+      {% endif %}
+      <a href="{{ url_for('profile', username=post.username) }}" class="btn btn-outline btn-sm mt-2">Профіль автора</a>
+    </div>
+
+    <div class="card">
+      <div class="sidebar-title">Навігація</div>
+      <a href="{{ url_for('index') }}" class="btn btn-outline btn-sm" style="width:100%;justify-content:center">← Всі пости</a>
+    </div>
+  </aside>
+</div>
+{% endblock %}

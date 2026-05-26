@@ -1,0 +1,142 @@
+{% extends "base.html" %}
+{% block title %}Адмін-панель — BlogUA{% endblock %}
+{% block head %}
+<style>
+.admin-nav {
+  display: flex; gap: .5rem; flex-wrap: wrap;
+  margin-bottom: 2rem;
+}
+.admin-nav a {
+  padding: .45rem 1rem; border-radius: var(--radius);
+  font-size: .875rem; font-weight: 500;
+  text-decoration: none; color: var(--muted);
+  border: 1px solid var(--border);
+  transition: all .15s;
+}
+.admin-nav a:hover, .admin-nav a.active {
+  background: var(--ink); color: #fff; border-color: var(--ink);
+}
+
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  gap: 1rem; margin-bottom: 2rem;
+}
+.stat-card {
+  background: #fff; border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 1.25rem;
+  text-align: center;
+}
+.stat-card .num {
+  font-family: 'Playfair Display', serif;
+  font-size: 2.2rem; font-weight: 700; line-height: 1;
+}
+.stat-card .lbl {
+  font-size: .78rem; color: var(--muted);
+  text-transform: uppercase; letter-spacing: .5px;
+  margin-top: .35rem;
+}
+.stat-card.alert .num { color: var(--accent); }
+.stat-card.warn  .num { color: var(--warning); }
+.stat-card.good  .num { color: var(--success); }
+
+.section-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.2rem; margin-bottom: 1rem;
+}
+.pending-item {
+  padding: .75rem 0; border-bottom: 1px solid var(--border);
+}
+.pending-item:last-child { border-bottom: none; }
+.two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+@media (max-width: 640px) { .two-col { grid-template-columns: 1fr; } }
+</style>
+{% endblock %}
+{% block content %}
+<div class="page-header">
+  <h1>⚙ Адмін-панель</h1>
+  <p>Управління блогом та користувачами</p>
+</div>
+
+<nav class="admin-nav">
+  <a href="{{ url_for('admin_panel') }}" class="active">Огляд</a>
+  <a href="{{ url_for('admin_users') }}">Користувачі</a>
+  <a href="{{ url_for('admin_posts') }}">Пости</a>
+  <a href="{{ url_for('admin_comments') }}">Коментарі</a>
+  <a href="{{ url_for('index') }}">← На блог</a>
+</nav>
+
+<div class="stats-grid">
+  <div class="stat-card">
+    <div class="num">{{ stats.users }}</div>
+    <div class="lbl">Користувачів</div>
+  </div>
+  <div class="stat-card">
+    <div class="num">{{ stats.posts }}</div>
+    <div class="lbl">Постів</div>
+  </div>
+  <div class="stat-card">
+    <div class="num">{{ stats.comments }}</div>
+    <div class="lbl">Коментарів</div>
+  </div>
+  <div class="stat-card {% if stats.pending > 0 %}alert{% endif %}">
+    <div class="num">{{ stats.pending }}</div>
+    <div class="lbl">На модерації</div>
+  </div>
+  <div class="stat-card {% if stats.blocked > 0 %}warn{% endif %}">
+    <div class="num">{{ stats.blocked }}</div>
+    <div class="lbl">Заблоковано</div>
+  </div>
+  <div class="stat-card">
+    <div class="num">{{ stats.drafts }}</div>
+    <div class="lbl">Чернеток</div>
+  </div>
+</div>
+
+<div class="two-col">
+  <div class="card">
+    <div class="section-title">⏳ Очікують модерації ({{ pending_comments|length }})</div>
+    {% if pending_comments %}
+      {% for c in pending_comments[:5] %}
+        <div class="pending-item">
+          <div style="font-size:.82rem;color:var(--muted);margin-bottom:.3rem">
+            <strong>{{ c.username }}</strong> до «{{ c.post_title[:40] }}»
+          </div>
+          <p style="font-size:.9rem;margin-bottom:.5rem">{{ c.content[:120] }}{% if c.content|length>120 %}…{% endif %}</p>
+          <div class="flex gap-1">
+            <form method="post" action="{{ url_for('approve_comment', comment_id=c.id) }}">
+              <button class="btn btn-success btn-sm">✓ Схвалити</button>
+            </form>
+            <form method="post" action="{{ url_for('reject_comment', comment_id=c.id) }}"
+                  onsubmit="return confirm('Видалити коментар?')">
+              <button class="btn btn-danger btn-sm">✗ Відхилити</button>
+            </form>
+          </div>
+        </div>
+      {% endfor %}
+      {% if pending_comments|length > 5 %}
+        <a href="{{ url_for('admin_comments') }}" class="btn btn-outline btn-sm mt-2">
+          Переглянути всі ({{ pending_comments|length }})
+        </a>
+      {% endif %}
+    {% else %}
+      <p class="text-muted">Немає коментарів на модерації 🎉</p>
+    {% endif %}
+  </div>
+
+  <div class="card">
+    <div class="section-title">👤 Нові користувачі</div>
+    {% for u in recent_users %}
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:.6rem 0;border-bottom:1px solid var(--border)">
+        <div>
+          <span style="font-weight:600">{{ u.username }}</span>
+          {% if u.role == 'admin' %}<span class="badge-admin">admin</span>{% endif %}
+          {% if u.is_blocked %}<span style="color:var(--accent);font-size:.75rem"> 🚫 заблок.</span>{% endif %}
+          <div class="text-muted" style="font-size:.78rem">{{ u.created_at[:10] }}</div>
+        </div>
+        <a href="{{ url_for('admin_users') }}" class="btn btn-outline btn-sm">→</a>
+      </div>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block title %}Реєстрація — BlogUA{% endblock %}
+{% block head %}
+<style>
+.auth-wrap { max-width: 440px; margin: 3rem auto; }
+.auth-card { background: #fff; border: 1px solid var(--border); border-radius: var(--radius); padding: 2.5rem; }
+.auth-title { font-family: 'Playfair Display', serif; font-size: 1.8rem; margin-bottom: .35rem; }
+.auth-sub { color: var(--muted); font-size: .9rem; margin-bottom: 2rem; }
+.auth-footer { text-align: center; margin-top: 1.5rem; font-size: .875rem; color: var(--muted); }
+.auth-footer a { color: var(--accent2); font-weight: 500; }
+.hint { font-size: .78rem; color: var(--muted); margin-top: .3rem; }
+</style>
+{% endblock %}
+{% block content %}
+<div class="auth-wrap">
+  <div class="auth-card">
+    <h1 class="auth-title">Реєстрація</h1>
+    <p class="auth-sub">Створіть свій акаунт безкоштовно</p>
+
+    <form method="post">
+      <div class="form-group">
+        <label>Ім'я користувача</label>
+        <input type="text" name="username" value="{{ username or '' }}"
+               required minlength="3" placeholder="мінімум 3 символи">
+        <p class="hint">Тільки літери, цифри та "_"</p>
+      </div>
+      <div class="form-group">
+        <label>Email</label>
+        <input type="email" name="email" value="{{ email or '' }}" required>
+      </div>
+      <div class="form-group">
+        <label>Пароль</label>
+        <input type="password" name="password" required minlength="6" placeholder="мінімум 6 символів">
+      </div>
+      <div class="form-group">
+        <label>Підтвердіть пароль</label>
+        <input type="password" name="confirm_password" required>
+      </div>
+      <button type="submit" class="btn btn-accent" style="width:100%;justify-content:center">Створити акаунт</button>
+    </form>
+
+    <div class="auth-footer">
+      Вже є акаунт? <a href="{{ url_for('login') }}">Увійти</a>
+    </div>
+  </div>
+</div>
+{% endblock %}

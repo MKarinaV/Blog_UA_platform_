@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+{% block title %}Користувачі — Адмін{% endblock %}
+{% block head %}
+<style>
+.admin-nav { display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:2rem; }
+.admin-nav a { padding:.45rem 1rem;border-radius:var(--radius);font-size:.875rem;font-weight:500;text-decoration:none;color:var(--muted);border:1px solid var(--border);transition:all .15s; }
+.admin-nav a:hover,.admin-nav a.active { background:var(--ink);color:#fff;border-color:var(--ink); }
+table { width:100%;border-collapse:collapse; }
+th { padding:.75rem 1rem;text-align:left;font-size:.78rem;text-transform:uppercase;letter-spacing:.5px;color:var(--muted);border-bottom:2px solid var(--border);background:var(--cream); }
+td { padding:.75rem 1rem;border-bottom:1px solid var(--border);vertical-align:middle; }
+tr:last-child td { border-bottom:none; }
+tr:hover td { background:var(--cream); }
+.role-select { padding:.25rem .5rem;border:1px solid var(--border);border-radius:var(--radius);font-size:.8rem;font-family:inherit; }
+</style>
+{% endblock %}
+{% block content %}
+<div class="page-header">
+  <h1>Управління користувачами</h1>
+  <p>Всі зареєстровані акаунти ({{ users|length }})</p>
+</div>
+<nav class="admin-nav">
+  <a href="{{ url_for('admin_panel') }}">Огляд</a>
+  <a href="{{ url_for('admin_users') }}" class="active">Користувачі</a>
+  <a href="{{ url_for('admin_posts') }}">Пости</a>
+  <a href="{{ url_for('admin_comments') }}">Коментарі</a>
+  <a href="{{ url_for('index') }}">← На блог</a>
+</nav>
+
+<div class="card" style="padding:0;overflow-x:auto">
+  <table>
+    <thead>
+      <tr>
+        <th>ID</th>
+        <th>Ім'я</th>
+        <th>Email</th>
+        <th>Роль</th>
+        <th>Пости</th>
+        <th>Коментарі</th>
+        <th>Реєстрація</th>
+        <th>Статус</th>
+        <th style="text-align:right">Дії</th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for u in users %}
+      <tr {% if u.is_blocked %}style="opacity:.6"{% endif %}>
+        <td style="color:var(--muted);font-size:.8rem">{{ u.id }}</td>
+        <td>
+          <strong>{{ u.username }}</strong>
+          {% if u.id == session.user_id %}
+            <span style="font-size:.72rem;color:var(--success);margin-left:3px">(ви)</span>
+          {% endif %}
+        </td>
+        <td style="font-size:.85rem;color:var(--muted)">{{ u.email }}</td>
+        <td>
+          {% if u.role == 'admin' %}
+            <span class="badge-admin">admin</span>
+          {% else %}
+            <form method="post" action="{{ url_for('set_user_role', user_id=u.id) }}" style="display:inline">
+              <select name="role" class="role-select" onchange="this.form.submit()">
+                <option value="user"      {{ 'selected' if u.role=='user' }}>user</option>
+                <option value="moderator" {{ 'selected' if u.role=='moderator' }}>moderator</option>
+                <option value="admin"     {{ 'selected' if u.role=='admin' }}>admin</option>
+              </select>
+            </form>
+          {% endif %}
+        </td>
+        <td>{{ u.post_count }}</td>
+        <td>{{ u.comment_count }}</td>
+        <td style="font-size:.82rem;color:var(--muted)">{{ u.created_at[:10] }}</td>
+        <td>
+          {% if u.is_blocked %}
+            <span style="color:var(--accent);font-size:.82rem;font-weight:500">🚫 Заблок.</span>
+          {% else %}
+            <span style="color:var(--success);font-size:.82rem">✓ Активний</span>
+          {% endif %}
+        </td>
+        <td style="text-align:right">
+          {% if u.role != 'admin' %}
+            <div class="flex gap-1" style="justify-content:flex-end">
+              <form method="post" action="{{ url_for('toggle_block_user', user_id=u.id) }}">
+                <button type="submit" class="btn btn-sm {{ 'btn-success' if u.is_blocked else 'btn-danger' }}">
+                  {{ 'Розблок.' if u.is_blocked else 'Блок.' }}
+                </button>
+              </form>
+              <form method="post" action="{{ url_for('admin_delete_user', user_id=u.id) }}"
+                    onsubmit="return confirm('Видалити користувача {{ u.username }}? Всі пости та коментарі будуть видалені!')">
+                <button type="submit" class="btn btn-danger btn-sm">🗑</button>
+              </form>
+            </div>
+          {% else %}
+            <span class="text-muted" style="font-size:.78rem">—</span>
+          {% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

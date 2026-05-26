@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{% block title %}BlogUA{% endblock %}</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400&family=IBM+Plex+Sans:wght@300;400;500&family=IBM+Plex+Mono&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --ink: #1a1a2e;
+    --paper: #faf8f3;
+    --cream: #f0ece2;
+    --accent: #c94040;
+    --accent2: #2a6496;
+    --muted: #7a7068;
+    --border: #ddd8cc;
+    --success: #2d7a4f;
+    --warning: #c97a10;
+    --radius: 4px;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'IBM Plex Sans', sans-serif;
+    background: var(--paper);
+    color: var(--ink);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* NAV */
+  nav {
+    background: var(--ink);
+    border-bottom: 3px solid var(--accent);
+    padding: 0 2rem;
+    position: sticky; top: 0; z-index: 100;
+  }
+  .nav-inner {
+    max-width: 1100px; margin: 0 auto;
+    display: flex; align-items: center; gap: 1rem;
+    height: 58px;
+  }
+  .nav-brand {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.5rem; font-weight: 700;
+    color: #fff; text-decoration: none;
+    letter-spacing: -0.5px;
+    flex-shrink: 0;
+  }
+  .nav-brand span { color: var(--accent); }
+  .nav-links {
+    display: flex; align-items: center; gap: 0.25rem;
+    margin-left: auto;
+  }
+  .nav-links a, .nav-links button {
+    color: #ccc; text-decoration: none;
+    padding: 0.35rem 0.75rem; border-radius: var(--radius);
+    font-size: 0.875rem; font-weight: 500;
+    transition: color .15s, background .15s;
+    background: none; border: none; cursor: pointer;
+    font-family: inherit;
+  }
+  .nav-links a:hover, .nav-links button:hover { color: #fff; background: rgba(255,255,255,.08); }
+  .nav-links .btn-nav-accent {
+    background: var(--accent); color: #fff; margin-left: .5rem;
+  }
+  .nav-links .btn-nav-accent:hover { background: #a83232; }
+  .badge-admin {
+    background: var(--accent); color: #fff;
+    font-size: 0.65rem; padding: 1px 5px; border-radius: 3px;
+    text-transform: uppercase; letter-spacing: 0.5px;
+    margin-left: 3px; vertical-align: middle;
+  }
+  .badge-mod {
+    background: var(--warning); color: #fff;
+    font-size: 0.65rem; padding: 1px 5px; border-radius: 3px;
+    text-transform: uppercase; letter-spacing: 0.5px;
+    margin-left: 3px; vertical-align: middle;
+  }
+
+  /* FLASH */
+  .flash-wrap { max-width: 1100px; margin: 1rem auto; padding: 0 2rem; }
+  .flash {
+    padding: .75rem 1rem; border-radius: var(--radius);
+    font-size: .875rem; border-left: 3px solid;
+    margin-bottom: .5rem; display: flex; align-items: center; gap: .5rem;
+  }
+  .flash.success { background: #eaf5ee; border-color: var(--success); color: #1d5234; }
+  .flash.error   { background: #fdecea; border-color: var(--accent);   color: #7a1f1f; }
+  .flash.info    { background: #e8f0f8; border-color: var(--accent2);  color: #1a3f5c; }
+  .flash.warning { background: #fff8e6; border-color: var(--warning);  color: #7a5000; }
+
+  /* MAIN */
+  main { flex: 1; max-width: 1100px; margin: 0 auto; padding: 2rem; width: 100%; }
+
+  /* CARDS */
+  .card {
+    background: #fff; border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 1.5rem;
+    transition: box-shadow .2s;
+  }
+  .card:hover { box-shadow: 0 4px 16px rgba(0,0,0,.08); }
+
+  /* BUTTONS */
+  .btn {
+    display: inline-flex; align-items: center; gap: .4rem;
+    padding: .5rem 1.1rem; border-radius: var(--radius);
+    font-size: .875rem; font-weight: 500; font-family: inherit;
+    cursor: pointer; text-decoration: none; border: 1px solid transparent;
+    transition: all .15s;
+  }
+  .btn-primary  { background: var(--ink);    color: #fff; border-color: var(--ink);    }
+  .btn-primary:hover  { background: #2e2e4e; }
+  .btn-accent   { background: var(--accent); color: #fff; border-color: var(--accent); }
+  .btn-accent:hover   { background: #a83232; }
+  .btn-outline  { background: transparent;  color: var(--ink); border-color: var(--border); }
+  .btn-outline:hover  { background: var(--cream); }
+  .btn-danger   { background: transparent;  color: var(--accent); border-color: var(--accent); }
+  .btn-danger:hover   { background: var(--accent); color: #fff; }
+  .btn-success  { background: var(--success); color: #fff; border-color: var(--success); }
+  .btn-success:hover  { background: #235f3d; }
+  .btn-sm { padding: .3rem .7rem; font-size: .8rem; }
+
+  /* FORMS */
+  .form-group { margin-bottom: 1.25rem; }
+  label { display: block; font-size: .875rem; font-weight: 500; margin-bottom: .4rem; color: var(--muted); }
+  input[type=text], input[type=email], input[type=password], textarea, select {
+    width: 100%; padding: .6rem .85rem;
+    border: 1px solid var(--border); border-radius: var(--radius);
+    font-size: .9rem; font-family: inherit; color: var(--ink);
+    background: #fff; transition: border-color .15s;
+  }
+  input:focus, textarea:focus, select:focus {
+    outline: none; border-color: var(--accent2);
+    box-shadow: 0 0 0 3px rgba(42,100,150,.1);
+  }
+  textarea { resize: vertical; min-height: 180px; }
+
+  /* PAGE HEADER */
+  .page-header {
+    margin-bottom: 2rem;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid var(--border);
+  }
+  .page-header h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: 2rem; font-weight: 700;
+  }
+  .page-header p { color: var(--muted); margin-top: .35rem; }
+
+  /* STATUS BADGES */
+  .status {
+    display: inline-block; font-size: .7rem; font-weight: 500;
+    padding: 2px 8px; border-radius: 10px; text-transform: uppercase;
+    letter-spacing: .5px;
+  }
+  .status-published { background: #d4edda; color: #1d5234; }
+  .status-draft     { background: #fff3cd; color: #856404; }
+
+  /* TAGS */
+  .tag {
+    display: inline-block; background: var(--cream);
+    color: var(--muted); font-size: .75rem;
+    padding: 2px 10px; border-radius: 10px;
+    border: 1px solid var(--border); margin: 2px;
+  }
+
+  /* FOOTER */
+  footer {
+    background: var(--ink); color: #888;
+    text-align: center; padding: 1.25rem 2rem;
+    font-size: .8rem; margin-top: auto;
+  }
+  footer strong { color: #ccc; }
+
+  /* UTILS */
+  .text-muted { color: var(--muted); font-size: .85rem; }
+  .text-center { text-align: center; }
+  .mt-1 { margin-top: .5rem; }
+  .mt-2 { margin-top: 1rem; }
+  .mt-3 { margin-top: 1.5rem; }
+  .flex { display: flex; align-items: center; }
+  .gap-1 { gap: .5rem; }
+  .gap-2 { gap: 1rem; }
+
+  @media (max-width: 640px) {
+    nav { padding: 0 1rem; }
+    main { padding: 1rem; }
+    .nav-brand { font-size: 1.2rem; }
+  }
+</style>
+{% block head %}{% endblock %}
+</head>
+<body>
+
+<nav>
+  <div class="nav-inner">
+    <a class="nav-brand" href="{{ url_for('index') }}">Blog<span>UA</span></a>
+    <div class="nav-links">
+      <a href="{{ url_for('index') }}">Головна</a>
+      {% if session.user_id %}
+        <a href="{{ url_for('new_post') }}">+ Новий пост</a>
+        <a href="{{ url_for('my_posts') }}">Мої пости</a>
+        <a href="{{ url_for('profile', username=session.username) }}">
+          {{ session.username }}
+          {% if session.role == 'admin' %}<span class="badge-admin">admin</span>{% endif %}
+          {% if session.role == 'moderator' %}<span class="badge-mod">mod</span>{% endif %}
+        </a>
+        {% if session.role in ['admin', 'moderator'] %}
+        <a href="{{ url_for('admin_comments') }}">
+          {% if session.role == 'admin' %}
+          ⚙ Адмін
+          {% else %}
+          💬 Модерація
+    {% endif %}
+  </a>
+{% endif %}
+        <a href="{{ url_for('logout') }}">Вийти</a>
+      {% else %}
+        <a href="{{ url_for('login') }}">Увійти</a>
+        <a href="{{ url_for('register') }}" class="btn-nav-accent">Реєстрація</a>
+      {% endif %}
+    </div>
+  </div>
+</nav>
+
+{% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+    <div class="flash-wrap">
+      {% for cat, msg in messages %}
+        <div class="flash {{ cat }}">{{ msg }}</div>
+      {% endfor %}
+    </div>
+  {% endif %}
+{% endwith %}
+
+<main>{% block content %}{% endblock %}</main>
+
+<footer>
+  <strong>BlogUA</strong> — блогова платформа · 2026
+</footer>
+</body>
+</html>

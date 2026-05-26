@@ -1,0 +1,63 @@
+{% extends "base.html" %}
+{% block title %}Вхід — BlogUA{% endblock %}
+{% block head %}
+<style>
+.auth-wrap {
+  max-width: 420px; margin: 3rem auto;
+}
+.auth-card {
+  background: #fff; border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 2.5rem;
+}
+.auth-title {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.8rem; margin-bottom: .35rem;
+}
+.auth-sub { color: var(--muted); font-size: .9rem; margin-bottom: 2rem; }
+.auth-footer { text-align: center; margin-top: 1.5rem; font-size: .875rem; color: var(--muted); }
+.auth-footer a { color: var(--accent2); font-weight: 500; }
+.demo-box {
+  background: var(--cream); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 1rem; margin-bottom: 1.5rem;
+  font-size: .8rem; color: var(--muted);
+}
+.demo-box strong { display: block; margin-bottom: .3rem; color: var(--ink); }
+code { font-family: 'IBM Plex Mono', monospace; background: #e8e4da; padding: 1px 4px; border-radius: 2px; }
+</style>
+{% endblock %}
+{% block content %}
+<div class="auth-wrap">
+  <div class="auth-card">
+    <h1 class="auth-title">Вхід</h1>
+    <p class="auth-sub">Рада бачити вас знову</p>
+
+    {% if blocked %}
+    <div style="background:#fdecea;border:2px solid var(--accent);border-radius:var(--radius);padding:1rem 1.25rem;margin-bottom:1.5rem">
+      <div style="font-weight:700;color:var(--accent);margin-bottom:.4rem">🚫 Акаунт заблоковано</div>
+      <p style="font-size:.88rem;color:#7a1f1f">Ваш акаунт заблоковано адміністратором платформи. Якщо ви вважаєте це помилкою — зверніться до адміністрації.</p>
+    </div>
+    {% endif %}
+
+    <div class="demo-box">
+      <strong>🔐 Демо адміністратор</strong>
+      Логін: <code>admin</code> &nbsp; Пароль: <code>admin123</code>
+    </div>
+
+    <form method="post">
+      <div class="form-group">
+        <label>Ім'я користувача</label>
+        <input type="text" name="username" value="{{ username or '' }}" required autofocus>
+      </div>
+      <div class="form-group">
+        <label>Пароль</label>
+        <input type="password" name="password" required>
+      </div>
+      <button type="submit" class="btn btn-primary" style="width:100%;justify-content:center">Увійти</button>
+    </form>
+
+    <div class="auth-footer">
+      Немає акаунту? <a href="{{ url_for('register') }}">Зареєструватися</a>
+    </div>
+  </div>
+</div>
+{% endblock %}

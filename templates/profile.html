@@ -1,0 +1,95 @@
+{% extends "base.html" %}
+{% block title %}{{ profile_user.username }} — BlogUA{% endblock %}
+{% block head %}
+<style>
+.profile-header {
+  background: var(--ink); color: #fff;
+  padding: 2.5rem 2rem; margin: -2rem -2rem 2rem;
+  border-bottom: 3px solid var(--accent);
+}
+.profile-avatar {
+  width: 64px; height: 64px; border-radius: 50%;
+  background: var(--accent); color: #fff;
+  font-family: 'Playfair Display', serif;
+  font-size: 1.8rem; font-weight: 700;
+  display: flex; align-items: center; justify-content: center;
+  margin-bottom: 1rem;
+}
+.profile-name {
+  font-family: 'Playfair Display', serif;
+  font-size: 1.8rem; font-weight: 700;
+}
+.profile-meta { color: #999; font-size: .85rem; margin-top: .4rem; }
+.profile-stats { display: flex; gap: 2rem; margin-top: 1rem; }
+.stat { text-align: center; }
+.stat-num { font-size: 1.4rem; font-weight: 700; }
+.stat-lbl { font-size: .75rem; color: #999; }
+.post-list-item {
+  display: flex; justify-content: space-between; align-items: flex-start;
+  padding: 1rem 0; border-bottom: 1px solid var(--border);
+  gap: 1rem;
+}
+.post-list-item:last-child { border-bottom: none; }
+.post-list-title { font-family: 'Playfair Display', serif; font-weight: 700; }
+.post-list-title a { text-decoration: none; color: var(--ink); }
+.post-list-title a:hover { color: var(--accent); }
+.blocked-banner {
+  background: #fdecea; border: 1px solid var(--accent);
+  border-radius: var(--radius); padding: .75rem 1rem;
+  color: var(--accent); font-weight: 500;
+  margin-bottom: 1rem;
+}
+</style>
+{% endblock %}
+{% block content %}
+<div class="profile-header">
+  <div class="profile-avatar">{{ profile_user.username[0].upper() }}</div>
+  <div class="profile-name">
+    {{ profile_user.username }}
+    {% if profile_user.role == 'admin' %}<span class="badge-admin">admin</span>{% endif %}
+    {% if profile_user.role == 'moderator' %}<span class="badge-mod">mod</span>{% endif %}
+  </div>
+  <div class="profile-meta">
+    Зареєстрований: {{ profile_user.created_at[:10] }}
+    {% if profile_user.email and user and (user.id == profile_user.id or user.role == 'admin') %}
+      · {{ profile_user.email }}
+    {% endif %}
+  </div>
+  <div class="profile-stats">
+    <div class="stat">
+      <div class="stat-num">{{ posts|length }}</div>
+      <div class="stat-lbl">Постів</div>
+    </div>
+  </div>
+</div>
+
+{% if profile_user.is_blocked %}
+  <div class="blocked-banner">🚫 Цей акаунт заблоковано адміністратором</div>
+{% endif %}
+
+<div class="card">
+  <div style="font-weight:600;margin-bottom:1rem">Опубліковані пости</div>
+  {% if posts %}
+    {% for post in posts %}
+      <div class="post-list-item">
+        <div>
+          <div class="post-list-title">
+            <a href="{{ url_for('view_post', post_id=post.id) }}">{{ post.title }}</a>
+          </div>
+          <div class="text-muted mt-1">{{ post.created_at[:10] }} · 👁 {{ post.views }}</div>
+          {% if post.tags %}
+            <div style="margin-top:.4rem">
+              {% for tag in post.tags.split(',')[:3] %}
+                <span class="tag">{{ tag.strip() }}</span>
+              {% endfor %}
+            </div>
+          {% endif %}
+        </div>
+        <a href="{{ url_for('view_post', post_id=post.id) }}" class="btn btn-outline btn-sm" style="flex-shrink:0">→</a>
+      </div>
+    {% endfor %}
+  {% else %}
+    <p class="text-muted">Немає опублікованих постів.</p>
+  {% endif %}
+</div>
+{% endblock %}

@@ -1,0 +1,61 @@
+{% extends "base.html" %}
+{% block title %}Мої пости — BlogUA{% endblock %}
+{% block content %}
+<div class="page-header">
+  <h1>Мої пости</h1>
+  <p>Всі ваші записи — опубліковані та чернетки</p>
+</div>
+
+<div style="margin-bottom:1rem">
+  <a href="{{ url_for('new_post') }}" class="btn btn-accent">+ Новий пост</a>
+</div>
+
+<div class="card" style="padding:0">
+  {% if posts %}
+    <table style="width:100%;border-collapse:collapse">
+      <thead>
+        <tr style="border-bottom:2px solid var(--border);background:var(--cream)">
+          <th style="padding:.75rem 1rem;text-align:left;font-size:.8rem;text-transform:uppercase;letter-spacing:.5px;color:var(--muted)">Заголовок</th>
+          <th style="padding:.75rem 1rem;text-align:left;font-size:.8rem;text-transform:uppercase;letter-spacing:.5px;color:var(--muted)">Статус</th>
+          <th style="padding:.75rem 1rem;text-align:left;font-size:.8rem;text-transform:uppercase;letter-spacing:.5px;color:var(--muted)">Перегляди</th>
+          <th style="padding:.75rem 1rem;text-align:left;font-size:.8rem;text-transform:uppercase;letter-spacing:.5px;color:var(--muted)">Дата</th>
+          <th style="padding:.75rem 1rem;text-align:right;font-size:.8rem;text-transform:uppercase;letter-spacing:.5px;color:var(--muted)">Дії</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for post in posts %}
+        <tr style="border-bottom:1px solid var(--border)">
+          <td style="padding:.75rem 1rem">
+            <a href="{{ url_for('view_post', post_id=post.id) }}"
+               style="font-weight:600;text-decoration:none;color:var(--ink)">
+              {{ post.title[:60] }}{% if post.title|length > 60 %}…{% endif %}
+            </a>
+          </td>
+          <td style="padding:.75rem 1rem">
+            <span class="status status-{{ post.status }}">
+              {{ 'Опублікований' if post.status == 'published' else 'Чернетка' }}
+            </span>
+          </td>
+          <td style="padding:.75rem 1rem;color:var(--muted)">{{ post.views }}</td>
+          <td style="padding:.75rem 1rem;color:var(--muted);font-size:.85rem">{{ post.created_at[:10] }}</td>
+          <td style="padding:.75rem 1rem;text-align:right">
+            <div class="flex gap-1" style="justify-content:flex-end">
+              <a href="{{ url_for('edit_post', post_id=post.id) }}" class="btn btn-outline btn-sm">✎</a>
+              <form method="post" action="{{ url_for('delete_post', post_id=post.id) }}"
+                    onsubmit="return confirm('Видалити пост «{{ post.title }}»?')">
+                <button type="submit" class="btn btn-danger btn-sm">🗑</button>
+              </form>
+            </div>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% else %}
+    <div class="text-center" style="padding:3rem">
+      <p class="text-muted">У вас ще немає постів.</p>
+      <a href="{{ url_for('new_post') }}" class="btn btn-primary mt-2">Написати перший</a>
+    </div>
+  {% endif %}
+</div>
+{% endblock %}
